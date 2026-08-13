@@ -5,7 +5,11 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  preview: {
+    allowedHosts: true, // Permit all host domains on Render / cloud deployments
+  },
   server: {
+    allowedHosts: true,
     port: 5173,
     proxy: {
       '/api': {
