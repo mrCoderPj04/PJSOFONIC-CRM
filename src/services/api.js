@@ -88,6 +88,7 @@ export const api = {
   getProjects: (statusFilter = null) => request(`/projects${statusFilter ? `?status_filter=${statusFilter}` : ''}`),
   getProject: (id) => request(`/projects/${id}`),
   createProject: (data) => request('/projects', { method: 'POST', body: JSON.stringify(data) }),
+  deleteProject: (id) => request(`/projects/${id}`, { method: 'DELETE' }),
   updateProjectStatus: (id, status, rejection_reason = null) => request(`/projects/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status, rejection_reason }),

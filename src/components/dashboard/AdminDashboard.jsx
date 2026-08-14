@@ -13,7 +13,11 @@ import {
   FileText,
   Plus,
   Zap,
-  Sparkles
+  Sparkles,
+  Rocket,
+  X,
+  Globe,
+  Code
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -41,8 +45,37 @@ export default function AdminDashboard() {
     loadDashboardData();
   }, []);
 
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [submitForm, setSubmitForm] = useState({
+    projectId: '',
+    live_project_url: '',
+    source_code_url: '',
+    bug_report_url: '',
+    documentation_url: ''
+  });
+
   const newRequests = projects.filter(p => p.status === 'NEW');
   const activeProjects = projects.filter(p => p.status !== 'COMPLETED' && p.status !== 'REJECTED');
+  const activeProjectsOnly = projects.filter(p => p.status !== 'NEW' && p.status !== 'REJECTED' && p.status !== 'COMPLETED');
+
+  const handleAdminSubmitProject = async (e) => {
+    e.preventDefault();
+    if (!submitForm.projectId) {
+      alert('Please select an active project.');
+      return;
+    }
+    try {
+      await api.submitFinalDeliverables(submitForm.projectId, submitForm);
+      alert('🚀 Project Deliverable submitted cleanly to Customer Portal!');
+      setShowSubmitModal(false);
+      setSubmitForm({ projectId: '', live_project_url: '', source_code_url: '', bug_report_url: '', documentation_url: '' });
+      const [kpiData, projectList] = await Promise.all([api.getKPIs(), api.getProjects()]);
+      setKpis(kpiData);
+      setProjects(projectList || []);
+    } catch (err) {
+      alert('Failed to submit project deliverable: ' + err.message);
+    }
+  };
 
   const openProjectDetail = (projectId) => {
     setSelectedProjectId(projectId);
@@ -74,6 +107,14 @@ export default function AdminDashboard() {
 
         <div className="flex items-center space-x-3">
           <button
+            onClick={() => setShowSubmitModal(true)}
+            className="px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 text-white shadow-lg shadow-emerald-500/25 flex items-center space-x-2 transition-all"
+          >
+            <Rocket className="w-3.5 h-3.5" />
+            <span>Submit Project Deliverables</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('leads')}
             className="px-4 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center space-x-2 transition-all"
           >
@@ -90,6 +131,125 @@ export default function AdminDashboard() {
           </button>
         </div>
       </div>
+
+      {/* Admin Submit Project Deliverable Modal */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-panel p-6 rounded-3xl border border-indigo-500/40 max-w-lg w-full space-y-5 bg-slate-950 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center space-x-3">
+                {(() => {
+                  const selProj = projects.find(p => String(p.id) === String(submitForm.projectId));
+                  if (selProj && (selProj.status === 'COMPLETED' || selProj.customer_approved_at)) {
+                    return (
+                      <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[11px] font-extrabold flex items-center space-x-1 shadow-sm">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>✓ Approved by Customer</span>
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
+                <div className="flex items-center space-x-2 text-emerald-400 font-extrabold text-sm">
+                  <Rocket className="w-5 h-5" />
+                  <span>Admin Final Deliverables Submission Section</span>
+                </div>
+              </div>
+              <button onClick={() => setShowSubmitModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAdminSubmitProject} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Select Active Project *</label>
+                <select
+                  required
+                  value={submitForm.projectId}
+                  onChange={(e) => setSubmitForm(prev => ({ ...prev, projectId: e.target.value }))}
+                  className="w-full glass-input p-3 rounded-xl bg-slate-900 text-slate-100 border border-slate-800"
+                >
+                  <option value="">-- Choose Active Project --</option>
+                  {activeProjectsOnly.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title} ({p.project_code}) - {p.company_name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-slate-400 mt-1">Only active in-progress projects are listed here.</p>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Live Project Demo Link (URL) *</label>
+                <div className="flex items-center space-x-2">
+                  <Globe className="w-4 h-4 text-indigo-400 shrink-0" />
+                  <input
+                    type="url"
+                    required
+                    placeholder="https://client-demo.pjsofonic.com or Google Drive link"
+                    value={submitForm.live_project_url}
+                    onChange={(e) => setSubmitForm(prev => ({ ...prev, live_project_url: e.target.value }))}
+                    className="w-full glass-input p-3 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">Source Code Repository URL (Optional)</label>
+                <div className="flex items-center space-x-2">
+                  <Code className="w-4 h-4 text-purple-400 shrink-0" />
+                  <input
+                    type="url"
+                    placeholder="https://github.com/pjsofonic/client-project"
+                    value={submitForm.source_code_url}
+                    onChange={(e) => setSubmitForm(prev => ({ ...prev, source_code_url: e.target.value }))}
+                    className="w-full glass-input p-3 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">QA Bug Sheet URL (Optional)</label>
+                  <input
+                    type="url"
+                    placeholder="https://docs.google.com/spreadsheets/..."
+                    value={submitForm.bug_report_url}
+                    onChange={(e) => setSubmitForm(prev => ({ ...prev, bug_report_url: e.target.value }))}
+                    className="w-full glass-input p-2.5 rounded-xl text-[11px]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">User Manual / Doc URL (Optional)</label>
+                  <input
+                    type="url"
+                    placeholder="https://docs.google.com/document/..."
+                    value={submitForm.documentation_url}
+                    onChange={(e) => setSubmitForm(prev => ({ ...prev, documentation_url: e.target.value }))}
+                    className="w-full glass-input p-2.5 rounded-xl text-[11px]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowSubmitModal(false)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-extrabold shadow-lg shadow-emerald-500/25"
+                >
+                  Submit Deliverables to Customer Portal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
