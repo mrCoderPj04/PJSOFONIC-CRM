@@ -25,7 +25,7 @@ export default function CustomerNewProjectRequest() {
 
   const [formData, setFormData] = useState({
     title: '',
-    project_type: 'E-Commerce Web Application',
+    project_type: 'Full Stack',
     company_name: user?.company || '',
     overview: '',
     requirements_html: `<h2>1. Functional Requirements</h2>
@@ -129,6 +129,12 @@ export default function CustomerNewProjectRequest() {
                 onChange={(e) => setFormData({ ...formData, project_type: e.target.value })}
                 className="w-full glass-input p-3 rounded-xl text-xs bg-slate-900"
               >
+                <option value="Full Stack">Full Stack</option>
+                <option value="AI/ML">AI/ML</option>
+                <option value="DevOps">DevOps</option>
+                <option value="Coding Project">Coding Project</option>
+                <option value="Kubernetes">Kubernetes</option>
+                <option value="Web3">Web3</option>
                 <option value="E-Commerce Web Application">E-Commerce Web Application</option>
                 <option value="Mobile Application (iOS & Android)">Mobile Application (iOS & Android)</option>
                 <option value="Enterprise SaaS Platform">Enterprise SaaS Platform</option>
