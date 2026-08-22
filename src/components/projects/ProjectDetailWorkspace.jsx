@@ -140,10 +140,23 @@ export default function ProjectDetailWorkspace({ projectId }) {
     try {
       const updated = await api.updateProjectStatus(projectId, 'APPROVED');
       setProject(updated);
-      alert('Project Approved! Milestones initialized for client team.');
+      const erpStatus = updated.erp_sync_status === 'SYNCED' ? 'Successfully synced with ERP!' : 'Dispatched to ERP system queue.';
+      alert(`Project Approved! Milestones initialized and ${erpStatus}`);
       loadProjectData();
     } catch (err) {
       alert('Failed to approve project: ' + err.message);
+    }
+  };
+
+  const handleSyncERP = async () => {
+    try {
+      const updated = await api.syncProjectToERP(projectId);
+      setProject(updated);
+      const isSynced = updated.erp_sync_status === 'SYNCED';
+      alert(isSynced ? 'Project successfully synced with ERP!' : `Project payload dispatched to ERP (Status: ${updated.erp_sync_status}).`);
+      loadProjectData();
+    } catch (err) {
+      alert('Failed to sync to ERP: ' + err.message);
     }
   };
 
@@ -478,6 +491,15 @@ export default function ProjectDetailWorkspace({ projectId }) {
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Health: {project.health}</span>
               </span>
+              {project.erp_sync_status && (
+                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                  project.erp_sync_status === 'SYNCED' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                  project.erp_sync_status === 'FAILED' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' :
+                  'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                }`}>
+                  ERP: {project.erp_sync_status}
+                </span>
+              )}
             </div>
 
             <h1 className="text-2xl font-black text-white">{project.title}</h1>
@@ -502,6 +524,17 @@ export default function ProjectDetailWorkspace({ projectId }) {
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>APPROVE REQUEST</span>
+              </button>
+            )}
+
+            {isAdmin && project.status !== 'NEW' && (
+              <button
+                onClick={handleSyncERP}
+                className="px-3.5 py-2 text-xs font-bold rounded-xl bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300 border border-cyan-500/30 flex items-center space-x-1.5 transition-all cursor-pointer"
+                title="Sync project updates with ERP backend system"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Sync to ERP</span>
               </button>
             )}
 

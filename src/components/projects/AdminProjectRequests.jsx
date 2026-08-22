@@ -26,8 +26,9 @@ export default function AdminProjectRequests() {
 
   const handleApprove = async (id) => {
     try {
-      await api.updateProjectStatus(id, 'APPROVED');
-      alert('Project Approved! Status updated to APPROVED and milestones initialized.');
+      const res = await api.updateProjectStatus(id, 'APPROVED');
+      const erpStatus = res.erp_sync_status === 'SYNCED' ? 'Successfully synced with ERP!' : 'Dispatched to ERP queue.';
+      alert(`Project Approved! Milestones initialized and ${erpStatus}`);
       fetchRequests();
     } catch (err) {
       alert('Failed to approve project: ' + err.message);

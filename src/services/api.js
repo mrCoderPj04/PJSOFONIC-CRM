@@ -97,6 +97,8 @@ export const api = {
     method: 'PATCH',
     body: JSON.stringify({ overall_progress, subsystem_progress, health }),
   }),
+  syncProjectToERP: (projectId) => request(`/projects/${projectId}/sync-erp`, { method: 'POST' }),
+  getProjectERPPayload: (projectId) => request(`/projects/${projectId}/erp-payload`),
 
   // Final Project Delivery & Approval
   submitFinalDeliverables: (projectId, data) => request(`/projects/${projectId}/final-submission`, {
