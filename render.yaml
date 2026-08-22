@@ -1,11 +1,26 @@
 services:
   - type: web
     name: pjsofonic-crm-frontend
-    env: static
+    runtime: static
     region: singapore
+    plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
+    autoDeploy: true
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://pjsofonic-crm-backend.onrender.com/api/v1
+      - key: NEXT_PUBLIC_API_BASE_URL
+        value: https://pjsofonic-crm-backend.onrender.com/api/v1
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        value: https://ffauweryjzpnskdaqcyp.supabase.co
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        value: sb_publishable_bLkboY3aqcA-LRqg7VROgw_IjxTh84f
+      - key: VITE_SUPABASE_URL
+        value: https://ffauweryjzpnskdaqcyp.supabase.co
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        value: sb_publishable_bLkboY3aqcA-LRqg7VROgw_IjxTh84f

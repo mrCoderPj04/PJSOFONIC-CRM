@@ -1,4 +1,11 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const rawApiBase = 
+  import.meta.env.VITE_API_BASE_URL || 
+  import.meta.env.NEXT_PUBLIC_API_BASE_URL || 
+  (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? '/api/v1' 
+    : 'https://pjsofonic-crm-backend.onrender.com/api/v1');
+
+const API_BASE = rawApiBase.endsWith('/') ? rawApiBase.slice(0, -1) : rawApiBase;
 
 export const getAuthToken = () => localStorage.getItem('pjsofonic_token');
 export const setAuthToken = (token) => localStorage.setItem('pjsofonic_token', token);
