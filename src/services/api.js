@@ -1,9 +1,7 @@
 const rawApiBase = 
   import.meta.env.VITE_API_BASE_URL || 
   import.meta.env.NEXT_PUBLIC_API_BASE_URL || 
-  (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? '/api/v1' 
-    : 'https://pjsofonic-crm-backend.onrender.com/api/v1');
+  '/api/v1';
 
 const API_BASE = rawApiBase.endsWith('/') ? rawApiBase.slice(0, -1) : rawApiBase;
 
@@ -33,7 +31,14 @@ async function request(endpoint, options = {}) {
     headers,
   };
 
-  const response = await fetch(`${API_BASE}${endpoint}`, config);
+  let response;
+  try {
+    response = await fetch(`${API_BASE}${endpoint}`, config);
+  } catch (netErr) {
+    throw new Error(
+      `Cannot connect to CRM backend server (${netErr.message || 'NetworkError'}). Please ensure the CRM backend is running.`
+    );
+  }
   
   if (response.status === 401 && endpoint !== '/auth/ems-login') {
     removeAuthToken();
@@ -49,11 +54,11 @@ async function request(endpoint, options = {}) {
     } else if (Array.isArray(errorData.detail)) {
       errorMsg = errorData.detail.map(d => d.msg || JSON.stringify(d)).join(', ');
     } else if (errorData.detail && typeof errorData.detail === 'object') {
-      errorMsg = errorData.detail.msg || JSON.stringify(errorData.detail);
-    } else if (errorData.message) {
-      errorMsg = typeof errorData.message === 'string' ? errorData.message : JSON.stringify(errorData.message);
+      errorMsg = errorData.detail.msg || errorData.detail.error || JSON.stringify(errorData.detail);
     } else if (errorData.error) {
       errorMsg = typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData.error);
+    } else if (errorData.message) {
+      errorMsg = typeof errorData.message === 'string' ? errorData.message : JSON.stringify(errorData.message);
     }
 
     throw new Error(errorMsg);
