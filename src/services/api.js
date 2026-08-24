@@ -69,15 +69,68 @@ async function request(endpoint, options = {}) {
 
 export const api = {
   // Auth
-  emsLogin: (loginId, password) => request('/auth/ems-login', {
-    method: 'POST',
-    body: JSON.stringify({
-      login_id: loginId,
-      email: loginId,
-      employeeId: loginId,
-      password: password
-    }),
-  }),
+  emsLogin: async (loginId, password) => {
+    try {
+      // 1. Primary: Authenticate through CRM backend proxy
+      return await request('/auth/ems-login', {
+        method: 'POST',
+        body: JSON.stringify({
+          login_id: loginId,
+          email: loginId,
+          employeeId: loginId,
+          password: password,
+        }),
+      });
+    } catch (backendErr) {
+      // 2. Client-Side Fallback: If Render server IP is rate-limited (HTTP 429), authenticate directly from browser
+      const isRateLimit = backendErr.message && (
+        backendErr.message.includes('429') || 
+        backendErr.message.includes('rate-limited') || 
+        backendErr.message.includes('high traffic') ||
+        backendErr.message.includes('Too Many Requests')
+      );
+
+      if (isRateLimit) {
+        try {
+          const emsResponse = await fetch('https://erp-backend-1-02lc.onrender.com/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              employeeId: loginId,
+              email: loginId,
+              username: loginId,
+              password: password,
+            }),
+          });
+
+          if (emsResponse.ok) {
+            const emsData = await emsResponse.json();
+            const emsUser = emsData.user || emsData.employee || emsData;
+            
+            // Send verified EMS payload to CRM backend to generate CRM session token
+            return await request('/auth/ems-login', {
+              method: 'POST',
+              body: JSON.stringify({
+                login_id: loginId,
+                password: password,
+                ems_user_payload: emsUser,
+                ems_token: emsData.accessToken || emsData.token,
+              }),
+            });
+          } else {
+            const emsErrData = await emsResponse.json().catch(() => ({}));
+            throw new Error(emsErrData.error || emsErrData.message || 'Invalid EMS credentials.');
+          }
+        } catch (directErr) {
+          throw new Error(directErr.message || backendErr.message);
+        }
+      }
+
+      throw backendErr;
+    }
+  },
   getMe: () => request('/auth/me'),
 
   // KPIs & Reports
