@@ -109,6 +109,15 @@ export const api = {
             const emsData = await emsResponse.json();
             const emsUser = emsData.user || emsData.employee || emsData;
             
+            const emsDept = String(emsUser.department || emsUser.Department || emsUser.dept || '').toUpperCase();
+            const emsRole = String(emsUser.role || emsUser.Role || '').toUpperCase();
+            const isCustomer = emsDept.includes('CUSTOMER') || emsDept.includes('CLIENT') || emsRole.includes('CUSTOMER') || emsRole.includes('CLIENT');
+            const isAdmin = ['ADMIN', 'ADMINISTRATION', 'MANAGEMENT', 'DIRECTOR', 'SUPERADMIN', 'DEVELOPER', 'LEAD', 'MANAGER'].some(adm => emsDept.includes(adm) || emsRole.includes(adm));
+
+            if (!isCustomer && !isAdmin) {
+              throw new Error(`Access Restricted: Only users from Customer or Admin departments can access CRM. (Your Department: ${emsUser.department || 'Not Specified'})`);
+            }
+
             // Send verified EMS payload to CRM backend to generate CRM session token
             return await request('/auth/ems-login', {
               method: 'POST',

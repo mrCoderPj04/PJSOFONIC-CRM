@@ -82,6 +82,11 @@ export default function ProjectDetailWorkspace({ projectId }) {
           bug_report_url: p.bug_report_url || '',
           documentation_url: p.documentation_url || ''
         });
+
+        // Automatically switch to Final Delivery & Approvals tab if project has deliverables pending approval
+        if (p.status === 'FINAL_APPROVAL' && !isAdmin) {
+          setTab('final_delivery');
+        }
       }
 
       // 2. Fetch sub-resources safely with Promise.allSettled
@@ -634,7 +639,7 @@ export default function ProjectDetailWorkspace({ projectId }) {
               </div>
 
               <p className="text-xs text-slate-400">
-                Submit/update the 4 final project links for customer testing, review, and single-click final approval.
+                Submit/update the 4 final project deliverables (simple text notes, instructions, or links) for customer review and final approval.
               </p>
 
               <form onSubmit={handleAdminFinalSubmission} className="space-y-4 text-xs">
@@ -642,11 +647,11 @@ export default function ProjectDetailWorkspace({ projectId }) {
                   <div>
                     <label className="text-slate-300 font-semibold block mb-1.5 flex items-center space-x-1.5">
                       <Globe className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Live Project URL / Demo Link</span>
+                      <span>Live Project Demo / Deployment Details (Text or URL)</span>
                     </label>
                     <input
-                      type="url"
-                      placeholder="https://clientapp.pjsofonic.com or Live Demo URL"
+                      type="text"
+                      placeholder="e.g. https://demo.clientapp.com or Staging deployed on port 3000"
                       value={finalLinks.live_project_url}
                       onChange={(e) => setFinalLinks({ ...finalLinks, live_project_url: e.target.value })}
                       className="w-full glass-input p-3 rounded-xl text-xs"
@@ -656,11 +661,11 @@ export default function ProjectDetailWorkspace({ projectId }) {
                   <div>
                     <label className="text-slate-300 font-semibold block mb-1.5 flex items-center space-x-1.5">
                       <Code className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Source Code / ZIP Drive Link</span>
+                      <span>Source Code / ZIP / Access Notes (Text or URL)</span>
                     </label>
                     <input
-                      type="url"
-                      placeholder="https://drive.google.com/file/... or GitHub repository"
+                      type="text"
+                      placeholder="e.g. GitHub repo link or ZIP in shared drive or credentials"
                       value={finalLinks.source_code_url}
                       onChange={(e) => setFinalLinks({ ...finalLinks, source_code_url: e.target.value })}
                       className="w-full glass-input p-3 rounded-xl text-xs"
@@ -672,11 +677,11 @@ export default function ProjectDetailWorkspace({ projectId }) {
                   <div>
                     <label className="text-slate-300 font-semibold block mb-1.5 flex items-center space-x-1.5">
                       <Bug className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Bug & Defect Report Drive Link</span>
+                      <span>Bug & Defect Report / QA Notes (Text or URL)</span>
                     </label>
                     <input
-                      type="url"
-                      placeholder="https://drive.google.com/file/... (QA Bug Sheet)"
+                      type="text"
+                      placeholder="e.g. All test cases passed or Bug Sheet URL"
                       value={finalLinks.bug_report_url}
                       onChange={(e) => setFinalLinks({ ...finalLinks, bug_report_url: e.target.value })}
                       className="w-full glass-input p-3 rounded-xl text-xs"
@@ -686,11 +691,11 @@ export default function ProjectDetailWorkspace({ projectId }) {
                   <div>
                     <label className="text-slate-300 font-semibold block mb-1.5 flex items-center space-x-1.5">
                       <FileText className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Documentation & Handover Drive Link</span>
+                      <span>Documentation & Handover Details (Text or URL)</span>
                     </label>
                     <input
-                      type="url"
-                      placeholder="https://drive.google.com/file/... (Handover Doc)"
+                      type="text"
+                      placeholder="e.g. User manual attached in files or Handover Doc URL"
                       value={finalLinks.documentation_url}
                       onChange={(e) => setFinalLinks({ ...finalLinks, documentation_url: e.target.value })}
                       className="w-full glass-input p-3 rounded-xl text-xs"
@@ -704,7 +709,7 @@ export default function ProjectDetailWorkspace({ projectId }) {
                     className="px-6 py-3 text-xs font-extrabold rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:brightness-110 text-white shadow-lg shadow-amber-500/25 flex items-center space-x-2 transition-all cursor-pointer"
                   >
                     <Rocket className="w-4 h-4" />
-                    <span>Submit Final Deliverables to Customer Portal</span>
+                    <span>Submit Final Deliverables for Customer Approval</span>
                   </button>
                 </div>
               </form>
@@ -742,18 +747,24 @@ export default function ProjectDetailWorkspace({ projectId }) {
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
                   <div className="flex items-center space-x-2 text-slate-300 font-bold">
                     <Globe className="w-4 h-4 text-emerald-400" />
-                    <span>Live Project URL / Demo Link</span>
+                    <span>Live Project / Demo / Deployment Notes</span>
                   </div>
                   {project.live_project_url ? (
-                    <a
-                      href={project.live_project_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3.5 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 font-bold block truncate flex items-center justify-between transition-all"
-                    >
-                      <span className="truncate">{project.live_project_url}</span>
-                      <ExternalLink className="w-4 h-4 shrink-0 ml-1" />
-                    </a>
+                    project.live_project_url.startsWith('http://') || project.live_project_url.startsWith('https://') ? (
+                      <a
+                        href={project.live_project_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3.5 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 font-bold block truncate flex items-center justify-between transition-all"
+                      >
+                        <span className="truncate">{project.live_project_url}</span>
+                        <ExternalLink className="w-4 h-4 shrink-0 ml-1" />
+                      </a>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-slate-200 font-medium whitespace-pre-wrap break-words">
+                        {project.live_project_url}
+                      </div>
+                    )
                   ) : (
                     <div className="text-slate-500 italic p-2.5 rounded-xl bg-slate-900/40">Not uploaded yet</div>
                   )}
@@ -763,18 +774,24 @@ export default function ProjectDetailWorkspace({ projectId }) {
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
                   <div className="flex items-center space-x-2 text-slate-300 font-bold">
                     <Code className="w-4 h-4 text-purple-400" />
-                    <span>Source Code / ZIP Drive Link</span>
+                    <span>Source Code / ZIP / Access Notes</span>
                   </div>
                   {project.source_code_url ? (
-                    <a
-                      href={project.source_code_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3.5 py-2.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 font-bold block truncate flex items-center justify-between transition-all"
-                    >
-                      <span className="truncate">{project.source_code_url}</span>
-                      <ExternalLink className="w-4 h-4 shrink-0 ml-1" />
-                    </a>
+                    project.source_code_url.startsWith('http://') || project.source_code_url.startsWith('https://') ? (
+                      <a
+                        href={project.source_code_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3.5 py-2.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 border border-purple-500/30 font-bold block truncate flex items-center justify-between transition-all"
+                      >
+                        <span className="truncate">{project.source_code_url}</span>
+                        <ExternalLink className="w-4 h-4 shrink-0 ml-1" />
+                      </a>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-purple-200 font-medium whitespace-pre-wrap break-words">
+                        {project.source_code_url}
+                      </div>
+                    )
                   ) : (
                     <div className="text-slate-500 italic p-2.5 rounded-xl bg-slate-900/40">Not uploaded yet</div>
                   )}
@@ -784,18 +801,24 @@ export default function ProjectDetailWorkspace({ projectId }) {
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
                   <div className="flex items-center space-x-2 text-slate-300 font-bold">
                     <Bug className="w-4 h-4 text-rose-400" />
-                    <span>Bug & Defect Report Drive Link</span>
+                    <span>Bug & Defect Report / QA Notes</span>
                   </div>
                   {project.bug_report_url ? (
-                    <a
-                      href={project.bug_report_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3.5 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 font-bold block truncate flex items-center justify-between transition-all"
-                    >
-                      <span className="truncate">{project.bug_report_url}</span>
-                      <ExternalLink className="w-4 h-4 shrink-0 ml-1" />
-                    </a>
+                    project.bug_report_url.startsWith('http://') || project.bug_report_url.startsWith('https://') ? (
+                      <a
+                        href={project.bug_report_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3.5 py-2.5 rounded-xl bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 font-bold block truncate flex items-center justify-between transition-all"
+                      >
+                        <span className="truncate">{project.bug_report_url}</span>
+                        <ExternalLink className="w-4 h-4 shrink-0 ml-1" />
+                      </a>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-rose-200 font-medium whitespace-pre-wrap break-words">
+                        {project.bug_report_url}
+                      </div>
+                    )
                   ) : (
                     <div className="text-slate-500 italic p-2.5 rounded-xl bg-slate-900/40">Not uploaded yet</div>
                   )}
@@ -805,18 +828,24 @@ export default function ProjectDetailWorkspace({ projectId }) {
                 <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2">
                   <div className="flex items-center space-x-2 text-slate-300 font-bold">
                     <FileText className="w-4 h-4 text-amber-400" />
-                    <span>Documentation & Handover Drive Link</span>
+                    <span>Documentation & Handover Notes</span>
                   </div>
                   {project.documentation_url ? (
-                    <a
-                      href={project.documentation_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3.5 py-2.5 rounded-xl bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/30 font-bold block truncate flex items-center justify-between transition-all"
-                    >
-                      <span className="truncate">{project.documentation_url}</span>
-                      <ExternalLink className="w-4 h-4 shrink-0 ml-1" />
-                    </a>
+                    project.documentation_url.startsWith('http://') || project.documentation_url.startsWith('https://') ? (
+                      <a
+                        href={project.documentation_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3.5 py-2.5 rounded-xl bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-500/30 font-bold block truncate flex items-center justify-between transition-all"
+                      >
+                        <span className="truncate">{project.documentation_url}</span>
+                        <ExternalLink className="w-4 h-4 shrink-0 ml-1" />
+                      </a>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-amber-200 font-medium whitespace-pre-wrap break-words">
+                        {project.documentation_url}
+                      </div>
+                    )
                   ) : (
                     <div className="text-slate-500 italic p-2.5 rounded-xl bg-slate-900/40">Not uploaded yet</div>
                   )}

@@ -57,7 +57,7 @@ export default function LoginPage() {
 
         {/* Info Banner */}
         <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 text-center leading-relaxed">
-          Sign in using your <strong className="text-slate-200">PJSOFONIC EMS</strong> credentials. Access is permitted strictly to <span className="text-indigo-300 font-bold">ADMIN</span> and <span className="text-emerald-300 font-bold">CUSTOMER</span> roles.
+          Sign in using your <strong className="text-slate-200">PJSOFONIC EMS</strong> (<code className="text-[11px] text-indigo-300">erp-backend-1-02lc.onrender.com</code>) credentials. Access is restricted strictly to users with <span className="text-indigo-300 font-bold">Department = Admin</span> or <span className="text-emerald-300 font-bold">Department = Customer</span>.
         </div>
 
         {/* Error Alert */}

@@ -46,6 +46,7 @@ export default function AdminDashboard() {
   }, []);
 
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [activeTabFilter, setActiveTabFilter] = useState('ALL_ACTIVE'); // ALL_ACTIVE, NEW, FINAL_APPROVAL, COMPLETED, ALL
   const [submitForm, setSubmitForm] = useState({
     projectId: '',
     live_project_url: '',
@@ -54,14 +55,16 @@ export default function AdminDashboard() {
     documentation_url: ''
   });
 
-  const newRequests = projects.filter(p => p.status === 'NEW');
+  const newRequests = projects.filter(p => p.status === 'NEW' || p.status === 'UNDER_REVIEW');
+  const awaitingApproval = projects.filter(p => p.status === 'FINAL_APPROVAL');
   const activeProjects = projects.filter(p => p.status !== 'COMPLETED' && p.status !== 'REJECTED');
-  const activeProjectsOnly = projects.filter(p => p.status !== 'NEW' && p.status !== 'REJECTED' && p.status !== 'COMPLETED');
+  const completedProjects = projects.filter(p => p.status === 'COMPLETED');
+  const selectableProjects = projects.filter(p => p.status !== 'REJECTED');
 
   const handleAdminSubmitProject = async (e) => {
     e.preventDefault();
     if (!submitForm.projectId) {
-      alert('Please select an active project.');
+      alert('Please select a project.');
       return;
     }
     try {
@@ -162,68 +165,68 @@ export default function AdminDashboard() {
 
             <form onSubmit={handleAdminSubmitProject} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Select Active Project *</label>
+                <label className="block text-slate-300 font-bold mb-1">Select Project for Deliverables *</label>
                 <select
                   required
                   value={submitForm.projectId}
                   onChange={(e) => setSubmitForm(prev => ({ ...prev, projectId: e.target.value }))}
                   className="w-full glass-input p-3 rounded-xl bg-slate-900 text-slate-100 border border-slate-800"
                 >
-                  <option value="">-- Choose Active Project --</option>
-                  {activeProjectsOnly.map((p) => (
+                  <option value="">-- Choose Project --</option>
+                  {selectableProjects.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.title} ({p.project_code}) - {p.company_name}
+                      {p.title} ({p.project_code}) - [{p.status.replace('_', ' ')}] - {p.company_name}
                     </option>
                   ))}
                 </select>
-                <p className="text-[10px] text-slate-400 mt-1">Only active in-progress projects are listed here.</p>
+                <p className="text-[10px] text-slate-400 mt-1">All active, pending, and in-review projects are listed here.</p>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Live Project Demo Link (URL) *</label>
+                <label className="block text-slate-300 font-bold mb-1">Live Project Demo / Deployment Details (Text or URL) *</label>
                 <div className="flex items-center space-x-2">
                   <Globe className="w-4 h-4 text-indigo-400 shrink-0" />
                   <input
-                    type="url"
+                    type="text"
                     required
-                    placeholder="https://client-demo.pjsofonic.com or Google Drive link"
+                    placeholder="e.g. https://demo.clientapp.com or Staging deployed on server port 3000"
                     value={submitForm.live_project_url}
                     onChange={(e) => setSubmitForm(prev => ({ ...prev, live_project_url: e.target.value }))}
-                    className="w-full glass-input p-3 rounded-xl"
+                    className="w-full glass-input p-3 rounded-xl text-xs"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-bold mb-1">Source Code Repository URL (Optional)</label>
+                <label className="block text-slate-300 font-bold mb-1">Source Code / Repository / ZIP Location (Text or URL)</label>
                 <div className="flex items-center space-x-2">
                   <Code className="w-4 h-4 text-purple-400 shrink-0" />
                   <input
-                    type="url"
-                    placeholder="https://github.com/pjsofonic/client-project"
+                    type="text"
+                    placeholder="e.g. GitHub repo link or ZIP uploaded to Google Drive folder"
                     value={submitForm.source_code_url}
                     onChange={(e) => setSubmitForm(prev => ({ ...prev, source_code_url: e.target.value }))}
-                    className="w-full glass-input p-3 rounded-xl"
+                    className="w-full glass-input p-3 rounded-xl text-xs"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">QA Bug Sheet URL (Optional)</label>
+                  <label className="block text-slate-300 font-bold mb-1">QA Bug Sheet / Status (Text or URL)</label>
                   <input
-                    type="url"
-                    placeholder="https://docs.google.com/spreadsheets/..."
+                    type="text"
+                    placeholder="e.g. All QA test cases passed 100% or Sheet link"
                     value={submitForm.bug_report_url}
                     onChange={(e) => setSubmitForm(prev => ({ ...prev, bug_report_url: e.target.value }))}
                     className="w-full glass-input p-2.5 rounded-xl text-[11px]"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-300 font-bold mb-1">User Manual / Doc URL (Optional)</label>
+                  <label className="block text-slate-300 font-bold mb-1">User Manual / Doc Notes (Text or URL)</label>
                   <input
-                    type="url"
-                    placeholder="https://docs.google.com/document/..."
+                    type="text"
+                    placeholder="e.g. Documentation attached in files or Doc link"
                     value={submitForm.documentation_url}
                     onChange={(e) => setSubmitForm(prev => ({ ...prev, documentation_url: e.target.value }))}
                     className="w-full glass-input p-2.5 rounded-xl text-[11px]"
@@ -276,7 +279,7 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-3 text-3xl font-extrabold text-white">{kpis?.active_projects || 0}</div>
           <div className="mt-2 text-[11px] text-violet-400 font-semibold flex items-center space-x-1">
-            <span>In Execution Phase</span>
+            <span>In Execution / Review</span>
           </div>
         </div>
 
@@ -289,7 +292,7 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-3 text-3xl font-extrabold text-white">{kpis?.completed_projects || 0}</div>
           <div className="mt-2 text-[11px] text-emerald-400 font-semibold flex items-center space-x-1">
-            <span>Delivered Successfully</span>
+            <span>Customer Approved</span>
           </div>
         </div>
 
@@ -307,59 +310,138 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Project Pipeline & Recent Requests Section */}
+      {/* Project Pipeline & Customer Submissions Queue Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Recent Customer Requests (Posts format) */}
+        {/* Left 2 Cols: Customer Requests & Pipeline View */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-200 flex items-center space-x-2">
-              <Briefcase className="w-4 h-4 text-indigo-400" />
-              <span>Recent Customer Submissions (Post View)</span>
-            </h2>
-            <button
-              onClick={() => setActiveTab('project_requests')}
-              className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center space-x-1"
-            >
-              <span>View All Requests</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-slate-200 flex items-center space-x-2">
+                <Briefcase className="w-4 h-4 text-indigo-400" />
+                <span>Customer Projects Queue (Visible across all stages)</span>
+              </h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                From submission to development, deliverables delivery, and customer final approval.
+              </p>
+            </div>
+
+            {/* Filter Pills */}
+            <div className="flex items-center space-x-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-[11px]">
+              <button
+                onClick={() => setActiveTabFilter('ALL_ACTIVE')}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  activeTabFilter === 'ALL_ACTIVE' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Active ({activeProjects.length})
+              </button>
+              <button
+                onClick={() => setActiveTabFilter('NEW')}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  activeTabFilter === 'NEW' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                New ({newRequests.length})
+              </button>
+              <button
+                onClick={() => setActiveTabFilter('FINAL_APPROVAL')}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  activeTabFilter === 'FINAL_APPROVAL' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Awaiting Approval ({awaitingApproval.length})
+              </button>
+              <button
+                onClick={() => setActiveTabFilter('COMPLETED')}
+                className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                  activeTabFilter === 'COMPLETED' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Completed ({completedProjects.length})
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            {projects.slice(0, 3).map((proj) => (
-              <div
-                key={proj.id}
-                className="glass-panel p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0"
-              >
-                <div className="space-y-1.5 max-w-md">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                      {proj.project_code}
-                    </span>
-                    <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                      proj.status === 'NEW' ? 'badge-new' :
-                      proj.status === 'IN_DEVELOPMENT' ? 'badge-dev' : 'badge-review'
-                    }`}>
-                      {proj.status.replace('_', ' ')}
-                    </span>
+          {/* Project List */}
+          <div className="space-y-3 max-h-[620px] overflow-y-auto pr-1">
+            {(() => {
+              let displayList = projects;
+              if (activeTabFilter === 'ALL_ACTIVE') {
+                displayList = activeProjects;
+              } else if (activeTabFilter === 'NEW') {
+                displayList = newRequests;
+              } else if (activeTabFilter === 'FINAL_APPROVAL') {
+                displayList = awaitingApproval;
+              } else if (activeTabFilter === 'COMPLETED') {
+                displayList = completedProjects;
+              }
+
+              if (displayList.length === 0) {
+                return (
+                  <div className="glass-panel p-8 text-center rounded-2xl border border-slate-800 text-slate-400 text-xs">
+                    No projects found for this filter.
                   </div>
-                  <h3 className="font-bold text-slate-100 text-sm">{proj.title}</h3>
-                  <p className="text-xs text-slate-400 line-clamp-2">{proj.overview}</p>
-                  <div className="flex items-center space-x-4 text-[11px] text-slate-500 pt-1">
-                    <span>Company: <strong className="text-slate-300">{proj.company_name}</strong></span>
-                    <span>Start: <strong className="text-slate-300">{proj.expected_start_date}</strong></span>
+                );
+              }
+
+              return displayList.map((proj) => (
+                <div
+                  key={proj.id}
+                  className="glass-panel p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 gap-4"
+                >
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        {proj.project_code}
+                      </span>
+                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
+                        proj.status === 'NEW' ? 'badge-new' :
+                        proj.status === 'COMPLETED' || proj.customer_approved_at ? 'badge-completed' :
+                        proj.status === 'FINAL_APPROVAL' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                        proj.status === 'IN_DEVELOPMENT' ? 'badge-dev' : 'badge-review'
+                      }`}>
+                        {proj.status === 'FINAL_APPROVAL' ? '⏳ AWAITING CLIENT APPROVAL' : proj.status.replace('_', ' ')}
+                      </span>
+                      {proj.customer_approved_at && (
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          ✓ Customer Approved
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-bold text-slate-100 text-sm truncate">{proj.title}</h3>
+                    <p className="text-xs text-slate-400 line-clamp-2">{proj.overview}</p>
+                    <div className="flex items-center space-x-4 text-[11px] text-slate-500 pt-1">
+                      <span>Company: <strong className="text-slate-300">{proj.company_name}</strong></span>
+                      <span>Target Delivery: <strong className="text-slate-300">{proj.expected_end_date}</strong></span>
+                      <span>Progress: <strong className="text-emerald-400">{proj.overall_progress}%</strong></span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2 shrink-0">
+                    {proj.status !== 'COMPLETED' && (
+                      <button
+                        onClick={() => {
+                          setSubmitForm(prev => ({ ...prev, projectId: String(proj.id) }));
+                          setShowSubmitModal(true);
+                        }}
+                        className="px-3 py-2 text-xs font-bold rounded-xl bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 flex items-center space-x-1 transition-all"
+                        title="Submit deliverables for this project"
+                      >
+                        <Rocket className="w-3.5 h-3.5" />
+                        <span>Deliverables</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => openProjectDetail(proj.id)}
+                      className="px-4 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 flex items-center space-x-1.5 transition-all"
+                    >
+                      <span>VIEW PROJECT</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => openProjectDetail(proj.id)}
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 flex items-center space-x-1.5 transition-all shrink-0"
-                >
-                  <span>VIEW PROJECT</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         </div>
 

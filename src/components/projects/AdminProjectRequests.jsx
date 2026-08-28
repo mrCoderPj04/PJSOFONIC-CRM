@@ -78,24 +78,36 @@ export default function AdminProjectRequests() {
         </div>
 
         {/* Filter Toggle Buttons */}
-        <div className="flex items-center space-x-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs">
+        <div className="flex items-center space-x-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs flex-wrap gap-y-1">
           <button
             onClick={() => setFilter('ALL')}
             className={`px-3 py-1.5 rounded-lg font-bold transition-all ${filter === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
           >
-            All Submissions ({requests.length})
+            All ({requests.length})
           </button>
           <button
             onClick={() => setFilter('NEW')}
             className={`px-3 py-1.5 rounded-lg font-bold transition-all ${filter === 'NEW' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
           >
-            Pending Review ({requests.filter(r => r.status === 'NEW').length})
+            Pending Review ({requests.filter(r => r.status === 'NEW' || r.status === 'UNDER_REVIEW').length})
           </button>
           <button
             onClick={() => setFilter('ACTIVE')}
             className={`px-3 py-1.5 rounded-lg font-bold transition-all ${filter === 'ACTIVE' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
           >
-            Approved & Active ({requests.filter(r => r.status !== 'NEW' && r.status !== 'REJECTED').length})
+            Active Execution ({requests.filter(r => r.status !== 'NEW' && r.status !== 'REJECTED' && r.status !== 'COMPLETED').length})
+          </button>
+          <button
+            onClick={() => setFilter('FINAL_APPROVAL')}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all ${filter === 'FINAL_APPROVAL' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+          >
+            Awaiting Approval ({requests.filter(r => r.status === 'FINAL_APPROVAL').length})
+          </button>
+          <button
+            onClick={() => setFilter('COMPLETED')}
+            className={`px-3 py-1.5 rounded-lg font-bold transition-all ${filter === 'COMPLETED' ? 'bg-teal-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+          >
+            Completed ({requests.filter(r => r.status === 'COMPLETED').length})
           </button>
         </div>
       </div>
